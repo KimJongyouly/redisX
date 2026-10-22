@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["crates/redisx-core", "crates/redisx-net", "crates/redisx-server", "crates/redisx-cli"]
+
+[workspace.package]
+edition = "2021"
+license = "RSALv2 OR SSPLv1 OR AGPL-3.0-only"

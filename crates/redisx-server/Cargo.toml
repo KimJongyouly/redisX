@@ -1,0 +1,61 @@
+[package]
+name = "redisx-server"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Phase 2 of the redis_src -> redisX migration: command dispatch, CONFIG GET/SET, MULTI/EXEC, server core. Ported from server.c/commands.c/config.c/multi.c. See redis_document/25_redisX.md."
+
+[dependencies]
+redisx-core = { path = "../redisx-core" }
+redisx-net = { path = "../redisx-net" }
+mio = { version = "1.0", features = ["os-poll", "net", "os-ext"] }
+mlua = { version = "0.9", features = ["lua54", "vendored"] }
+pyo3 = { version = "0.22", optional = true, features = ["auto-initialize"] }
+rustls = { version = "0.23.45", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-pemfile = "2.2.0"
+# Opt-in native DataFrame type (`RObj::DataFrame`, `DF.*` commands) — optional
+# and feature-gated exactly like `pyo3`, for the same reason: a pure-Rust
+# crate this heavy has no business being a default-build dependency. `csv`/
+# `ipc` cover DF.FROMCSV/DF.TOCSV (human-typeable ingest/export) and this
+# fork's own RDB persistence format (Arrow IPC bytes, not real-Redis-
+# compatible — see `dataframe.rs`'s module doc), `sql` enables
+# `polars::sql::SQLContext` for `DF.QUERY`, `parquet` enables DF.FROMPARQUET.
+# `parquet` was actually already a mandatory transitive dependency before
+# DF.FROMPARQUET existed, independent of whether anything used it by name:
+# `csv`/`ipc` both unconditionally pull in `streaming` (polars' streaming
+# execution engine), whose IPC source node has a hard, non-feature-gated
+# `use` of the parquet source node's internals (`polars-stream-0.55.2/src/
+# nodes/io_sources/ipc/mod.rs` references `io_sources::parquet` directly) —
+# the build would fail with "cannot find `parquet` in `io_sources`" without
+# it even if nothing used `ParquetReader`. An upstream polars-stream
+# packaging gap, not something to design around.
+#
+# `fmt_no_tty` enables `DataFrame`'s own `Display` impl (`DF.PRETTY`'s whole
+# reason to exist — see `dataframe.rs`'s `pretty_table`), i.e. the usual
+# `comfy-table`-based box-drawing table with a `shape: (rows, cols)` line.
+# Deliberately `fmt_no_tty`, not plain `fmt`: the latter additionally turns
+# on `comfy-table`'s `tty` feature (terminal-width detection, ANSI styling) —
+# meaningless and actively wrong for `redisx-server`, a daemon with no
+# attached terminal of its own; the table text goes out as an ordinary RESP
+# bulk string to whatever's actually attached to a terminal (`redisx-cli`),
+# so terminal-dependent formatting decisions have to be made there, not here.
+polars = { version = "0.55.2", default-features = false, features = ["csv", "ipc", "sql", "lazy", "parquet", "dtype-full", "fmt_no_tty"], optional = true }
+
+[build-dependencies]
+# Only used to read back the same interpreter config pyo3's own build step
+# already resolved, so `build.rs` can emit one extra linker flag (an rpath —
+# see `build.rs`'s doc comment). Not a new auto-detection mechanism of our
+# own; optional and feature-gated exactly like `pyo3` itself.
+pyo3-build-config = { version = "0.22", optional = true }
+
+[features]
+python = ["dep:pyo3", "dep:pyo3-build-config"]
+polars = ["dep:polars"]
+
+[lib]
+name = "redisx_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "redisx-server"
+path = "src/bin/redisx-server.rs"

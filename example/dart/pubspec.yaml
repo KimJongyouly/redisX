@@ -1,0 +1,8 @@
+name: redisx_examples
+description: redisX를 Dart 클라이언트(redis 패키지)로 사용해보는 예제 모음.
+publish_to: none
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  redis: ^4.1.0

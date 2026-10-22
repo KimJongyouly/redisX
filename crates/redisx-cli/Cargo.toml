@@ -1,0 +1,19 @@
+[package]
+name = "redisx-cli"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Phase 8 of the redis_src -> redisX migration: an interactive REPL + one-shot command runner, ported from (a deliberately narrow slice of) redis-cli.c. See redis_document/25_redisX.md."
+
+[dependencies]
+redisx-core = { path = "../redisx-core" }
+redisx-net = { path = "../redisx-net" }
+rustyline = "14"
+
+[[bin]]
+name = "redisx-cli"
+path = "src/main.rs"
+
+[[bin]]
+name = "redisx-benchmark"
+path = "src/bin/redisx-benchmark.rs"

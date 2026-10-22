@@ -1,0 +1,11 @@
+[workspace]
+
+[package]
+name = "redisx-examples"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+redis = "1"
+rand = "0.8"

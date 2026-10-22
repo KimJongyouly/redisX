@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-20T03:11:56Z",
+  "changed_file": "pubsub/main.go",
+  "test_command": "go test ./...",
+  "related_test": "",
+  "recommendation": "テストの実行を推奨します"
+}
